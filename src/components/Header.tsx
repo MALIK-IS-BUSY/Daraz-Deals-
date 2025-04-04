@@ -78,6 +78,7 @@ const Header: React.FC = () => {
 
   return (
     <HeaderContainer>
+      {/* Announcement Bar */}
       <AnnouncementBar>
         <MarqueeContainer>
           <MarqueeContent>
@@ -92,6 +93,7 @@ const Header: React.FC = () => {
         </MarqueeContainer>
       </AnnouncementBar>
       
+      {/* Main Header */}
       <MainHeader>
         <Container>
           <HeaderContent>
@@ -141,6 +143,7 @@ const Header: React.FC = () => {
         </Container>
       </MainHeader>
       
+      {/* Navigation Bar */}
       <NavigationBar>
         <Container>
           <CategoryMenu>
@@ -170,6 +173,7 @@ const Header: React.FC = () => {
         </Container>
       </NavigationBar>
       
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <MobileMenu>
           <MobileMenuHeader>
@@ -259,15 +263,15 @@ const HeaderContainer = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: ${props => props.theme.colors.secondary};
+  background-color: white;
 `;
 
 const AnnouncementBar = styled.div`
-  background-color: ${props => props.theme.colors.secondary};
+  background-color: #ee4d2d;
   color: white;
   font-weight: 500;
-  font-size: 13px;
-  padding: 8px 0;
+  font-size: 16px;
+  padding: 10px 0;
   overflow: hidden;
   position: relative;
   width: 100%;
@@ -295,6 +299,7 @@ const MarqueeContent = styled.div`
 
 const Container = styled.div`
   width: 100%;
+  back
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 ${props => props.theme.spacing.md};
@@ -302,7 +307,7 @@ const Container = styled.div`
 
 const MainHeader = styled.div`
   padding: 15px 0;
-  background-color: ${props => props.theme.colors.secondary};
+  background-color: ${props => props.theme.colors.white};
   position: relative;
 `;
 
@@ -326,7 +331,7 @@ const LogoAndTitleContainer = styled.div`
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     justify-content: center;
-    margin-left: 40px;
+    margin-left: 40px; // Make space for the mobile menu button
   }
 `;
 
@@ -344,7 +349,7 @@ const RightSection = styled.div`
 const SiteName = styled.h1`
   font-size: 28px;
   font-weight: 700;
-  color: white;
+  color: ${props => props.theme.colors.primary};
   letter-spacing: 1px;
   font-family: 'Poppins', 'Segoe UI', 'Roboto', sans-serif;
   text-transform: uppercase;
@@ -371,7 +376,7 @@ const LogoContainer = styled.div`
 `;
 
 const LogoImage = styled.img`
-  height: 50px;
+  height: 65px;
   width: auto;
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
@@ -394,7 +399,7 @@ const SearchToggle = styled.button`
   background: none;
   border: none;
   font-size: 20px;
-  color: white;
+  color: ${props => props.theme.colors.text};
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -402,7 +407,7 @@ const SearchToggle = styled.button`
   padding: 8px;
   
   &:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: ${props => props.theme.colors.primary};
   }
 `;
 
@@ -441,34 +446,22 @@ const CloseSearchButton = styled.button`
   background: none;
   border: none;
   font-size: 18px;
-  color: white;
+  color: ${props => props.theme.colors.text};
   cursor: pointer;
   
   &:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: ${props => props.theme.colors.primary};
   }
 `;
 
 const NavigationBar = styled.nav`
-  background-color: ${props => props.theme.colors.secondary};
-  padding: 10px 0;
-  color: white;
+  background-color: white;
+  padding: 0px 0;
+  border-bottom: 1px solid ${props => props.theme.colors.border};
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     display: none;
   }
-`;
-
-const pulse = keyframes`
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-`;
-
-const FlashSaleLink = styled.span`
-  color: white;
-  font-weight: 700;
-  animation: ${pulse} 2s infinite;
 `;
 
 const CategoryMenu = styled.ul`
@@ -485,19 +478,31 @@ const CategoryMenu = styled.ul`
   }
 `;
 
+const pulse = keyframes`
+  0% { color: ${props => props.theme.colors.primary}; }
+  50% { color: ${props => props.theme.colors.secondary}; }
+  100% { color: ${props => props.theme.colors.primary}; }
+`;
+
+const FlashSaleLink = styled.span`
+  color: ${props => props.theme.colors.primary};
+  font-weight: 700;
+  animation: ${pulse} 2s infinite;
+`;
+
 const CategoryItem = styled.li`
   white-space: nowrap;
   font-weight: 500;
   position: relative;
   
   a {
-    color: white;
+    color: ${props => props.theme.colors.text};
     text-decoration: none;
     transition: color 0.2s ease;
     padding: 5px 0;
     
     &:hover {
-      color: rgba(255, 255, 255, 0.8);
+      color: ${props => props.theme.colors.primary};
     }
   }
 `;
@@ -507,10 +512,9 @@ const AllCategoriesLink = styled.div`
   align-items: center;
   cursor: pointer;
   font-weight: 600;
-  color: white;
   
   &:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: ${props => props.theme.colors.primary};
   }
 `;
 
@@ -518,7 +522,7 @@ const CategoriesDropdown = styled.div`
   position: absolute;
   top: 100%;
   left: 0;
-  background: ${props => props.theme.colors.secondary};
+  background: white;
   width: 220px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
@@ -533,14 +537,9 @@ const CategoriesDropdown = styled.div`
 
 const DropdownItem = styled.div`
   padding: 8px 15px;
-  color: white;
   
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  a {
-    color: white;
+    background-color: ${props => props.theme.colors.lightGray};
   }
 `;
 
@@ -549,7 +548,7 @@ const MobileMenuButton = styled.button`
   font-size: 22px;
   background: none;
   border: none;
-  color: white;
+  color: ${props => props.theme.colors.text};
   cursor: pointer;
   position: absolute;
   left: 10px;
@@ -568,13 +567,12 @@ const MobileMenu = styled.div`
   left: 0;
   width: 280px;
   height: 100vh;
-  background-color: ${props => props.theme.colors.secondary};
+  background-color: white;
   z-index: 1000;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  color: white;
 `;
 
 const MobileMenuHeader = styled.div`
@@ -582,40 +580,34 @@ const MobileMenuHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid ${props => props.theme.colors.border};
 `;
 
 const CloseButton = styled.button`
   font-size: 24px;
   background: none;
   border: none;
-  color: white;
+  color: ${props => props.theme.colors.text};
   cursor: pointer;
 `;
 
 const MobileMenuSearch = styled.form`
   display: flex;
   padding: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid ${props => props.theme.colors.border};
   position: relative;
   
   input {
     flex: 1;
     width: 100%;
     padding: 12px 40px 12px 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid ${props => props.theme.colors.border};
     border-radius: 6px;
     font-size: 14px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
     
     &:focus {
       outline: none;
-      border-color: white;
-    }
-    
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.6);
+      border-color: ${props => props.theme.colors.primary};
     }
   }
   
@@ -626,7 +618,7 @@ const MobileMenuSearch = styled.form`
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: white;
+    color: ${props => props.theme.colors.primary};
     font-size: 16px;
     cursor: pointer;
     padding: 0;
@@ -636,7 +628,7 @@ const MobileMenuSearch = styled.form`
 const MobileMenuTitle = styled.h3`
   font-size: 16px;
   margin: 15px;
-  color: white;
+  color: ${props => props.theme.colors.text};
   font-weight: 600;
 `;
 
@@ -649,12 +641,11 @@ const MobileCategories = styled.ul`
   
   li {
     padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid ${props => props.theme.colors.border};
     
     a {
       display: block;
       font-weight: 500;
-      color: white;
     }
   }
 `;

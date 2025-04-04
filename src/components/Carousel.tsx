@@ -122,7 +122,7 @@ const CarouselContainer = styled.div`
   width: 100%;
   height: 300px;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 0px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
