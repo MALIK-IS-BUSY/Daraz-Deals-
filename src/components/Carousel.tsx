@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 interface Slide {
@@ -16,6 +16,11 @@ interface CarouselProps {
   interval?: number;
 }
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
 const Carousel: React.FC<CarouselProps> = ({ 
   slides, 
   autoplay = true, 
@@ -23,13 +28,18 @@ const Carousel: React.FC<CarouselProps> = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
     
     if (autoplay && !isHovering) {
       timer = setInterval(() => {
-        setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+        setIsAnimating(true);
+        setTimeout(() => {
+          setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+          setIsAnimating(false);
+        }, 300);
       }, interval);
     }
     
@@ -39,15 +49,27 @@ const Carousel: React.FC<CarouselProps> = ({
   }, [autoplay, interval, slides.length, isHovering]);
 
   const goToNextSlide = () => {
-    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+      setIsAnimating(false);
+    }, 300);
   };
 
   const goToPrevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+      setIsAnimating(false);
+    }, 300);
   };
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index);
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentSlide(index);
+      setIsAnimating(false);
+    }, 300);
   };
 
   if (!slides || slides.length === 0) {
@@ -65,7 +87,9 @@ const Carousel: React.FC<CarouselProps> = ({
             <SlideLink to={slide.url}>
               <SlideImage src={slide.image} alt={slide.title} />
               <SlideOverlay>
-                <SlideTitle>{slide.title}</SlideTitle>
+                <SlideContent className={isAnimating ? 'animating' : ''}>
+                  <SlideTitle>{slide.title}</SlideTitle>
+                </SlideContent>
               </SlideOverlay>
             </SlideLink>
           </Slide>
@@ -99,6 +123,7 @@ const CarouselContainer = styled.div`
   height: 300px;
   overflow: hidden;
   border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     height: 250px;
@@ -113,12 +138,13 @@ const SlidesContainer = styled.div`
   display: flex;
   width: 100%;
   height: 100%;
-  transition: transform 0.5s ease;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 `;
 
 const Slide = styled.div`
   min-width: 100%;
   height: 100%;
+  position: relative;
 `;
 
 const SlideLink = styled(Link)`
@@ -132,6 +158,7 @@ const SlideImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 `;
 
 const SlideOverlay = styled.div`
@@ -140,11 +167,23 @@ const SlideOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 70%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 70%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   padding: 20px;
+`;
+
+const SlideContent = styled.div`
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 0.5s ease;
+  animation: ${fadeIn} 0.5s ease;
+  
+  &.animating {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 `;
 
 const SlideTitle = styled.h3`
@@ -152,6 +191,7 @@ const SlideTitle = styled.h3`
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     font-size: 18px;
@@ -162,9 +202,10 @@ const ControlButton = styled.button<{ position: 'left' | 'right' }>`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  ${props => props.position === 'left' ? 'left: 10px;' : 'right: 10px;'}
-  background-color: rgba(255, 255, 255, 0.7);
+  ${props => props.position === 'left' ? 'left: 15px;' : 'right: 15px;'}
+  background-color: rgba(255, 255, 255, 0.9);
   color: ${props => props.theme.colors.text};
+  border: none;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -174,6 +215,7 @@ const ControlButton = styled.button<{ position: 'left' | 'right' }>`
   cursor: pointer;
   transition: all 0.3s ease;
   opacity: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   
   ${CarouselContainer}:hover & {
     opacity: 1;
@@ -181,12 +223,13 @@ const ControlButton = styled.button<{ position: 'left' | 'right' }>`
   
   &:hover {
     background-color: white;
+    transform: translateY(-50%) scale(1.1);
   }
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     width: 30px;
     height: 30px;
-    font-size: 12px;
+    ${props => props.position === 'left' ? 'left: 10px;' : 'right: 10px;'}
   }
 `;
 
@@ -197,13 +240,17 @@ const Indicators = styled.div`
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    bottom: 15px;
+  }
 `;
 
 const Indicator = styled.div<{ active: boolean }>`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: ${props => props.active ? '24px' : '8px'};
+  height: 8px;
+  border-radius: 4px;
   background-color: ${props => props.active ? 'white' : 'rgba(255, 255, 255, 0.5)'};
   cursor: pointer;
   transition: all 0.3s ease;
@@ -211,6 +258,11 @@ const Indicator = styled.div<{ active: boolean }>`
   &:hover {
     background-color: white;
   }
+  
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    height: 6px;
+    width: ${props => props.active ? '20px' : '6px'};
+  }
 `;
 
-export default Carousel; 
+export default Carousel;

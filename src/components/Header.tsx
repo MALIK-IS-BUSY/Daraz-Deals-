@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaSearch, FaBars } from 'react-icons/fa';
+import { FaSearch, FaBars, FaTimes } from 'react-icons/fa';
 import { getAllCategories } from '../services/categoryService';
 import { Category } from '../types/category';
 import theme from '../theme';
@@ -28,7 +28,6 @@ const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Focus the search input when expanded
     if (isSearchExpanded && searchInputRef.current) {
       searchInputRef.current.focus();
     }
@@ -47,21 +46,17 @@ const Header: React.FC = () => {
   };
 
   const toggleSearch = () => {
-    // Check if we're on mobile based on window width
-    const mobileBreakpoint = 768; // This matches the 'sm' breakpoint in theme
+    const mobileBreakpoint = 768;
     const isMobile = window.innerWidth <= mobileBreakpoint;
     
     if (isMobile) {
-      // On mobile, open the mobile menu directly
       setIsMobileMenuOpen(true);
     } else {
-      // On desktop, toggle the search expansion
       setIsSearchExpanded(!isSearchExpanded);
     }
   };
 
   const handleSearchBlur = (e: React.FocusEvent) => {
-    // Only collapse if clicking outside the search components
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsSearchExpanded(false);
     }
@@ -69,9 +64,7 @@ const Header: React.FC = () => {
 
   const handleSearchToggleOnMobile = () => {
     if (window.innerWidth <= parseInt(theme.breakpoints.sm.replace('px', ''))) {
-      // On mobile, open the mobile menu with focus on the search instead
       setIsMobileMenuOpen(true);
-      // We'll focus the search input in the mobile menu after it renders
       setTimeout(() => {
         const mobileSearchInput = document.querySelector('#mobile-search-input') as HTMLInputElement;
         if (mobileSearchInput) {
@@ -79,36 +72,37 @@ const Header: React.FC = () => {
         }
       }, 100);
     } else {
-      // On larger screens, use the original toggle behavior
       toggleSearch();
     }
   };
 
   return (
     <HeaderContainer>
-      {/* Headline Banner */}
+      {/* Announcement Bar */}
       <AnnouncementBar>
-        <ScrollWrapper>
-          <MarqueeText>
+        <MarqueeContainer>
+          <MarqueeContent>
             🔥 Hot Deals! Up to 70% OFF on Electronics! 🛍️ Affiliated Store - Get Discounts on New Arrivals! 📱 Download our App for Exclusive Offers!
-          </MarqueeText>
-          <MarqueeText>
-          🔥 Hot Deals! Up to 70% OFF on Electronics! 🛍️ Affiliated Store - Get Discounts on New Arrivals! 📱 Download our App for Exclusive Offers!
-          </MarqueeText>
-          <MarqueeText>
-          🔥 Hot Deals! Up to 70% OFF on Electronics! 🛍️ Affiliated Store - Get Discounts on New Arrivals! 📱 Download our App for Exclusive Offers!
-          </MarqueeText>
-        </ScrollWrapper>
+          </MarqueeContent>
+          <MarqueeContent>
+            🔥 Hot Deals! Up to 70% OFF on Electronics! 🛍️ Affiliated Store - Get Discounts on New Arrivals! 📱 Download our App for Exclusive Offers!
+          </MarqueeContent>
+          <MarqueeContent>
+            🔥 Hot Deals! Up to 70% OFF on Electronics! 🛍️ Affiliated Store - Get Discounts on New Arrivals! 📱 Download our App for Exclusive Offers!
+          </MarqueeContent>
+          
+        </MarqueeContainer>
       </AnnouncementBar>
       
+      {/* Main Header */}
       <MainHeader>
         <Container>
           <HeaderContent>
-            <MobileMenuButton onClick={toggleMobileMenu}>
-              <FaBars />
-            </MobileMenuButton>
-            
             <LeftSection>
+              <MobileMenuButton onClick={toggleMobileMenu}>
+                <FaBars />
+              </MobileMenuButton>
+              
               <LogoContainer>
                 <Link to="/">
                   <LogoImage src="/daraz-logo-removebg-preview.png" alt="Daraz Deals" />
@@ -124,7 +118,7 @@ const Header: React.FC = () => {
               <SearchContainer 
                 expanded={isSearchExpanded}
                 onBlur={handleSearchBlur}
-                tabIndex={0} // Make div focusable for blur event
+                tabIndex={0}
               >
                 {!isSearchExpanded ? (
                   <SearchToggle onClick={handleSearchToggleOnMobile}>
@@ -142,7 +136,9 @@ const Header: React.FC = () => {
                     <SearchButton type="submit">
                       <FaSearch />
                     </SearchButton>
-                    <CloseSearchButton type="button" onClick={toggleSearch}>×</CloseSearchButton>
+                    <CloseSearchButton type="button" onClick={toggleSearch}>
+                      <FaTimes />
+                    </CloseSearchButton>
                   </SearchBar>
                 )}
               </SearchContainer>
@@ -151,6 +147,7 @@ const Header: React.FC = () => {
         </Container>
       </MainHeader>
       
+      {/* Navigation Bar */}
       <NavigationBar>
         <Container>
           <CategoryMenu>
@@ -180,12 +177,16 @@ const Header: React.FC = () => {
         </Container>
       </NavigationBar>
       
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <MobileMenu>
           <MobileMenuHeader>
             <LogoImage src="/daraz-logo-removebg-preview.png" alt="Daraz Deals" style={{ height: '30px' }} />
-            <CloseButton onClick={toggleMobileMenu}>×</CloseButton>
+            <CloseButton onClick={toggleMobileMenu}>
+              <FaTimes />
+            </CloseButton>
           </MobileMenuHeader>
+          
           <MobileMenuSearch onSubmit={(e) => {
             e.preventDefault();
             if (searchQuery.trim()) {
@@ -205,6 +206,7 @@ const Header: React.FC = () => {
               <FaSearch />
             </SearchButton>
           </MobileMenuSearch>
+          
           <MobileCategories>
             <MobileMenuTitle>Categories</MobileMenuTitle>
             <li>
@@ -233,6 +235,7 @@ const Header: React.FC = () => {
                 <FlashSaleLink style={{ fontSize: '14px' }}>Flash Sale</FlashSaleLink>
               </Link>
             </li>
+            
             <MobileMenuTitle style={{ marginTop: '20px' }}>Quick Links</MobileMenuTitle>
             <li>
               <Link 
@@ -268,7 +271,7 @@ const HeaderContainer = styled.header`
 `;
 
 const AnnouncementBar = styled.div`
-  background-color: #ee4d2d; /* Red background */
+  background-color: #ee4d2d;
   color: white;
   font-weight: 500;
   font-size: 13px;
@@ -283,14 +286,14 @@ const ticker = keyframes`
   100% { transform: translate3d(-33.333%, 0, 0); }
 `;
 
-const ScrollWrapper = styled.div`
+const MarqueeContainer = styled.div`
   display: flex;
   white-space: nowrap;
   animation: ${ticker} 30s linear infinite;
   width: fit-content;
 `;
 
-const MarqueeText = styled.div`
+const MarqueeContent = styled.div`
   display: inline-block;
   white-space: nowrap;
   padding-right: 50px;
@@ -315,7 +318,7 @@ const HeaderContent = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: relative; /* Add position relative to contain the absolute positioned hamburger */
+  position: relative;
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     flex-wrap: wrap;
@@ -333,11 +336,11 @@ const LeftSection = styled.div`
     order: 1;
     width: auto;
     margin-right: 10px;
-    padding-left: 40px; /* Make space for the hamburger icon */
+    padding-left: 40px;
   }
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    padding-left: 50px; /* Make space for the hamburger icon */
+    padding-left: 50px;
   }
 `;
 
@@ -363,11 +366,12 @@ const CenterSection = styled.div`
 const RightSection = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     order: 3;
     width: auto;
-    justify-content: flex-end;
     position: absolute;
     right: 20px;
   }
@@ -421,7 +425,7 @@ const SearchContainer = styled.div<{ expanded: boolean }>`
   transition: width 0.3s ease;
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    display: none; /* Hide search completely on mobile/tablet */
+    display: none;
   }
 `;
 
@@ -498,6 +502,10 @@ const CategoryMenu = styled.ul`
   display: flex;
   gap: 25px;
   overflow-x: auto;
+  padding: 5px 0;
+  justify-content: center;
+  width: fit-content;
+  margin: 0 auto;
   
   &::-webkit-scrollbar {
     display: none;
@@ -520,10 +528,12 @@ const CategoryItem = styled.li`
   white-space: nowrap;
   font-weight: 500;
   position: relative;
-  padding: 5px 0;
   
   a {
-    transition: color 0.3s ease;
+    color: ${props => props.theme.colors.text};
+    text-decoration: none;
+    transition: color 0.2s ease;
+    padding: 5px 0;
     
     &:hover {
       color: ${props => props.theme.colors.primary};
@@ -674,10 +684,4 @@ const MobileCategories = styled.ul`
   }
 `;
 
-const MainHeaderContainer = styled(Container)`
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    padding-left: calc(${props => props.theme.spacing.md} + 30px); /* Add extra padding for hamburger menu */
-  }
-`;
-
-export default Header; 
+export default Header;
