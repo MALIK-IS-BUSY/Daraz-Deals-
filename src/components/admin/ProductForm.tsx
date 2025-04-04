@@ -12,6 +12,9 @@ interface ProductFormProps {
   onSubmit: () => void;
 }
 
+// Define type for image objects
+type ImageType = { id: string; url: string };
+
 const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose, onSubmit }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -20,14 +23,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
   const [stock, setStock] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [brand, setBrand] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageType[]>([]);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [features, setFeatures] = useState<string[]>([]);
   const [newFeature, setNewFeature] = useState('');
   const [affiliateUrl, setAffiliateUrl] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Initialize form with product data if editing
@@ -40,11 +42,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
       setStock(product.stockQuantity.toString());
       setCategoryId(product.categoryId);
       setBrand(product.brand || '');
-      setImages(product.images || []);
+      setImages(product.images.map((url, index) => ({ id: index.toString(), url })) || []);
       setFeatures(product.features || []);
       setAffiliateUrl(product.affiliateUrl || '');
     } else {
-      // Default values for new product
       setTitle('');
       setDescription('');
       setPrice('');
@@ -62,7 +63,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
     if (!title.trim()) return 'Title is required';
     if (!description.trim()) return 'Description is required';
     if (!price.trim() || isNaN(Number(price)) || Number(price) <= 0) return 'Valid price is required';
-    if (discountPrice.trim() && (isNaN(Number(discountPrice)) || Number(discountPrice) <= 0 || Number(discountPrice) >= Number(price))) {
+    if (
+      discountPrice.trim() &&
+      (isNaN(Number(discountPrice)) || Number(discountPrice) <= 0 || Number(discountPrice) >= Number(price))
+    ) {
       return 'Discount price must be less than the regular price';
     }
     if (!stock.trim() || isNaN(Number(stock)) || Number(stock) < 0) return 'Valid stock quantity is required';
@@ -73,22 +77,37 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
 
   const handleAddImage = () => {
     if (!newImageUrl.trim()) return;
-    
-    // Basic validation for URL format
     if (!newImageUrl.match(/^(http|https):\/\/[^ "]+$/)) {
       setError('Please enter a valid image URL');
       return;
     }
-    
-    setImages([...images, newImageUrl]);
+    const newImage = { id: Date.now().toString(), url: newImageUrl };
+    setImages([...images, newImage]);
     setNewImageUrl('');
     setError('');
   };
 
-  const handleRemoveImage = (index: number) => {
-    const updatedImages = [...images];
-    updatedImages.splice(index, 1);
-    setImages(updatedImages);
+  const handleRemoveImage = (id: string) => {
+    setImages(images.filter((image) => image.id !== id));
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      if (!selectedFile.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const newImage = { id: Date.now().toString(), url: result };
+        setImages([...images, newImage]);
+        setError('');
+      };
+      reader.readAsDataURL(selectedFile);
+    }
   };
 
   const handleAddFeature = () => {
@@ -105,16 +124,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
       return;
     }
-    
+
     setIsLoading(true);
     setError('');
-    
+
     try {
       const productData: Omit<Product, 'id' | 'rating' | 'reviews'> = {
         title,
@@ -124,20 +143,20 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
         stockQuantity: Number(stock),
         categoryId,
         brand: brand || undefined,
-        images,
+        images: images.map((image) => image.url),
         features,
         affiliateUrl: affiliateUrl || undefined,
         createdAt: product ? product.createdAt : new Date(),
         updatedAt: new Date(),
-        slug: product ? product.slug : title.toLowerCase().replace(/\s+/g, '-')
+        slug: product ? product.slug : title.toLowerCase().replace(/\s+/g, '-'),
       };
-      
+
       if (product) {
-        await updateProduct(product.id, productData, imageFile || undefined);
+        await updateProduct(product.id, productData);
       } else {
-        await createProduct(productData, imageFile || undefined);
+        await createProduct(productData);
       }
-      
+
       onSubmit();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -161,22 +180,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
     }
   };
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const selectedFile = files[0];
-      setImageFile(selectedFile);
-      
-      // Create a preview URL for the image
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        setImages([...images, result]);
-      };
-      reader.readAsDataURL(selectedFile);
-    }
-  };
-
   const handleOpenFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -192,9 +195,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
             <FaTimes />
           </CloseButton>
         </FormHeader>
-        
+
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        
+
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label htmlFor="title">Product Title*</Label>
@@ -207,7 +210,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               required
             />
           </FormGroup>
-          
+
           <FormGroup>
             <Label htmlFor="description">Description*</Label>
             <Textarea
@@ -219,7 +222,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               required
             />
           </FormGroup>
-          
+
           <FormRow>
             <FormGroup>
               <Label htmlFor="price">Price*</Label>
@@ -234,7 +237,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
                 required
               />
             </FormGroup>
-            
+
             <FormGroup>
               <Label htmlFor="discountPrice">Discount Price</Label>
               <Input
@@ -248,7 +251,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               />
             </FormGroup>
           </FormRow>
-          
+
           <FormRow>
             <FormGroup>
               <Label htmlFor="stock">Stock Quantity*</Label>
@@ -263,7 +266,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
                 required
               />
             </FormGroup>
-            
+
             <FormGroup>
               <Label htmlFor="brand">Brand</Label>
               <Input
@@ -275,7 +278,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               />
             </FormGroup>
           </FormRow>
-          
+
           <FormGroup>
             <Label htmlFor="affiliateUrl">Affiliate URL</Label>
             <Input
@@ -287,7 +290,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
             />
             <HelperText>The link where customers will be redirected when clicking "Buy on Daraz"</HelperText>
           </FormGroup>
-          
+
           <FormGroup>
             <Label htmlFor="category">Category*</Label>
             <Select
@@ -297,14 +300,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               required
             >
               <option value="">Select a category</option>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
             </Select>
           </FormGroup>
-          
+
           <FormGroup>
             <Label>Product Images*</Label>
             <InputGroup>
@@ -320,7 +323,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               </Button>
             </InputGroup>
             <HelperText>Add image URLs or upload images directly</HelperText>
-            
+
             <UploadButton type="button" onClick={handleOpenFileInput}>
               <FaUpload /> Upload Image from Device
             </UploadButton>
@@ -331,13 +334,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               accept="image/*"
               style={{ display: 'none' }}
             />
-            
+
             {images.length > 0 && (
               <ImagesGrid>
-                {images.map((image, index) => (
-                  <ImageItem key={index}>
-                    <ImagePreview src={image} alt={`Product ${index + 1}`} />
-                    <RemoveButton onClick={() => handleRemoveImage(index)}>
+                {images.map((image) => (
+                  <ImageItem key={image.id}>
+                    <ImagePreview src={image.url} alt="Product image" />
+                    <RemoveButton onClick={() => handleRemoveImage(image.id)}>
                       <FaTrash />
                     </RemoveButton>
                   </ImageItem>
@@ -345,7 +348,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               </ImagesGrid>
             )}
           </FormGroup>
-          
+
           <FormGroup>
             <Label>Product Features</Label>
             <InputGroup>
@@ -361,7 +364,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               </Button>
             </InputGroup>
             <HelperText>Add key features of your product</HelperText>
-            
+
             {features.length > 0 && (
               <FeaturesList>
                 {features.map((feature, index) => (
@@ -375,13 +378,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
               </FeaturesList>
             )}
           </FormGroup>
-          
+
           <FormActions>
             <CancelButton type="button" onClick={onClose}>
               Cancel
             </CancelButton>
             <SubmitButton type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : (product ? 'Update Product' : 'Save Product')}
+              {isLoading ? 'Saving...' : product ? 'Update Product' : 'Save Product'}
             </SubmitButton>
           </FormActions>
         </Form>
@@ -390,6 +393,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
   );
 };
 
+// Styled components (unchanged from your original code)
 const FormOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -420,7 +424,7 @@ const FormHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  border-bottom: 1px solid ${(props) => props.theme.colors.border};
   position: sticky;
   top: 0;
   background-color: white;
@@ -430,7 +434,7 @@ const FormHeader = styled.div`
 const FormTitle = styled.h2`
   margin: 0;
   font-size: 20px;
-  color: ${props => props.theme.colors.text};
+  color: ${(props) => props.theme.colors.text};
 `;
 
 const CloseButton = styled.button`
@@ -438,10 +442,9 @@ const CloseButton = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: ${props => props.theme.colors.lightText};
-  
+  color: ${(props) => props.theme.colors.lightText};
   &:hover {
-    color: ${props => props.theme.colors.primary};
+    color: ${(props) => props.theme.colors.primary};
   }
 `;
 
@@ -465,59 +468,54 @@ const Label = styled.label`
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: ${props => props.theme.colors.text};
+  color: ${(props) => props.theme.colors.text};
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 10px 15px;
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
   font-size: 14px;
-  
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${(props) => props.theme.colors.primary};
   }
 `;
 
 const Textarea = styled.textarea`
   width: 100%;
   padding: 10px 15px;
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
   font-size: 14px;
   resize: vertical;
-  
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${(props) => props.theme.colors.primary};
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 10px 15px;
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
   font-size: 14px;
   background-color: white;
-  
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${(props) => props.theme.colors.primary};
   }
 `;
 
 const FormRow = styled.div`
   display: flex;
   gap: 20px;
-  
   & > * {
     flex: 1;
   }
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
+  @media (max-width: ${(props) => props.theme.breakpoints.md}) {
     flex-direction: column;
     gap: 10px;
   }
@@ -526,7 +524,6 @@ const FormRow = styled.div`
 const InputGroup = styled.div`
   display: flex;
   gap: 10px;
-  
   & > button {
     flex-shrink: 0;
   }
@@ -537,21 +534,20 @@ const Button = styled.button`
   align-items: center;
   gap: 5px;
   padding: 10px 15px;
-  background-color: ${props => props.theme.colors.primary};
+  background-color: ${(props) => props.theme.colors.primary};
   color: white;
   border: none;
   border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  
   &:hover {
-    background-color: ${props => props.theme.colors.primaryDark};
+    background-color: ${(props) => props.theme.colors.primaryDark};
   }
 `;
 
 const HelperText = styled.div`
   font-size: 12px;
-  color: ${props => props.theme.colors.lightText};
+  color: ${(props) => props.theme.colors.lightText};
   margin-top: 5px;
 `;
 
@@ -580,7 +576,7 @@ const RemoveButton = styled.button`
   top: 5px;
   right: 5px;
   background-color: rgba(255, 255, 255, 0.8);
-  color: ${props => props.theme.colors.error};
+  color: ${(props) => props.theme.colors.error};
   border: none;
   border-radius: 50%;
   width: 25px;
@@ -590,7 +586,6 @@ const RemoveButton = styled.button`
   justify-content: center;
   font-size: 12px;
   cursor: pointer;
-  
   &:hover {
     background-color: white;
   }
@@ -619,12 +614,11 @@ const FeatureText = styled.div`
 const RemoveFeatureButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme.colors.error};
+  color: ${(props) => props.theme.colors.error};
   cursor: pointer;
   margin-left: 10px;
-  
   &:hover {
-    color: ${props => props.theme.colors.errorDark};
+    color: ${(props) => props.theme.colors.errorDark};
   }
 `;
 
@@ -640,7 +634,6 @@ const ActionButton = styled.button`
   border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -648,33 +641,31 @@ const ActionButton = styled.button`
 `;
 
 const SubmitButton = styled(ActionButton)`
-  background-color: ${props => props.theme.colors.primary};
+  background-color: ${(props) => props.theme.colors.primary};
   color: white;
   border: none;
-  
   &:hover:not(:disabled) {
-    background-color: ${props => props.theme.colors.primaryDark};
+    background-color: ${(props) => props.theme.colors.primaryDark};
   }
 `;
 
 const CancelButton = styled(ActionButton)`
   background-color: white;
-  color: ${props => props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
-  
+  color: ${(props) => props.theme.colors.text};
+  border: 1px solid ${(props) => props.theme.colors.border};
   &:hover:not(:disabled) {
-    background-color: ${props => props.theme.colors.lightGray};
+    background-color: ${(props) => props.theme.colors.lightGray};
   }
 `;
 
 const UploadButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.primary};
   cursor: pointer;
   font-weight: 600;
   padding: 0;
   margin-top: 10px;
 `;
 
-export default ProductForm; 
+export default ProductForm;
