@@ -102,7 +102,7 @@ const Header: React.FC = () => {
             <LogoAndTitleContainer>
               <LogoContainer>
                 <Link to="/">
-                  <LogoImage src="image-removebg-preview.png" />
+                  <LogoImage src="/daraz-logo-removebg-preview.png" alt="Daraz Deals" />
                 </Link>
               </LogoContainer>
               <SiteName as={Link} to="/">Daraz Deals</SiteName>
@@ -263,8 +263,8 @@ const HeaderContainer = styled.header`
 `;
 
 const AnnouncementBar = styled.div`
-  background-color: white;
-  color: black;
+  background-color: ${props => props.theme.colors.secondary};
+  color: white;
   font-weight: 500;
   font-size: 13px;
   padding: 8px 0;
