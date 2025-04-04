@@ -90,7 +90,6 @@ const Header: React.FC = () => {
           <MarqueeContent>
             🔥 Hot Deals! Up to 70% OFF on Electronics! 🛍️ Affiliated Store - Get Discounts on New Arrivals! 📱 Download our App for Exclusive Offers!
           </MarqueeContent>
-          
         </MarqueeContainer>
       </AnnouncementBar>
       
@@ -98,21 +97,18 @@ const Header: React.FC = () => {
       <MainHeader>
         <Container>
           <HeaderContent>
-            <LeftSection>
-              <MobileMenuButton onClick={toggleMobileMenu}>
-                <FaBars />
-              </MobileMenuButton>
-              
+            <MobileMenuButton onClick={toggleMobileMenu}>
+              <FaBars />
+            </MobileMenuButton>
+            
+            <LogoAndTitleContainer>
               <LogoContainer>
                 <Link to="/">
                   <LogoImage src="/daraz-logo-removebg-preview.png" alt="Daraz Deals" />
                 </Link>
               </LogoContainer>
-            </LeftSection>
-            
-            <CenterSection>
               <SiteName as={Link} to="/">Daraz Deals</SiteName>
-            </CenterSection>
+            </LogoAndTitleContainer>
             
             <RightSection>
               <SearchContainer 
@@ -321,45 +317,20 @@ const HeaderContent = styled.div`
   position: relative;
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    flex-wrap: wrap;
-    row-gap: 15px;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 0 10px;
   }
 `;
 
-const LeftSection = styled.div`
+const LogoAndTitleContainer = styled.div`
   display: flex;
   align-items: center;
-  position: relative;
-  
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    order: 1;
-    width: auto;
-    margin-right: 10px;
-    padding-left: 40px;
-  }
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    padding-left: 50px;
-  }
-`;
-
-const CenterSection = styled.div`
-  flex: 1;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    justify-content: center;
-  }
+  flex: 1;
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    margin-top: 0;
-    width: auto;
     justify-content: center;
-    order: 2;
-    flex: 0;
+    margin-left: 40px; // Make space for the mobile menu button
   }
 `;
 
@@ -367,16 +338,9 @@ const RightSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-left: auto;
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    order: 3;
-    width: auto;
-    position: absolute;
-    right: 20px;
-  }
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    position: static;
     margin-left: auto;
   }
 `;
@@ -388,7 +352,7 @@ const SiteName = styled.h1`
   letter-spacing: 1px;
   font-family: 'Poppins', 'Segoe UI', 'Roboto', sans-serif;
   text-transform: uppercase;
-  margin: 0;
+  margin: 0 0 0 10px;
   
   @media (max-width: ${props => props.theme.breakpoints.lg}) {
     font-size: 24px;
@@ -400,6 +364,7 @@ const SiteName = styled.h1`
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     font-size: 18px;
+    display: block;
   }
 `;
 
@@ -584,14 +549,14 @@ const MobileMenuButton = styled.button`
   border: none;
   color: ${props => props.theme.colors.text};
   cursor: pointer;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     display: block;
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
   }
 `;
 
