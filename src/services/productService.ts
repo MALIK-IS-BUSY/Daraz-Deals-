@@ -87,15 +87,30 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 };
 
 // Create a new product
-export const createProduct = async (productData: Omit<Product, 'id' | 'rating' | 'reviews'>): Promise<Product> => {
+export const createProduct = async (
+  productData: Omit<Product, 'id' | 'rating' | 'reviews'>, 
+  imageFile?: File
+): Promise<Product> => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Handle image file upload if present
+  let processedImages = [...productData.images];
+  if (imageFile) {
+    // In a real application, this would upload the file to a server/cloud storage
+    // For this mock, we'll keep the data URL in the images array
+    processedImages = processedImages.filter(img => !img.startsWith('data:'));
+    
+    // Just reuse the data URL that's already in the form
+    // In a real app, we would upload the file and get a URL back
+  }
   
   const newProduct: Product = {
     id: `product-${Date.now()}`,
     rating: 0,
     reviews: [],
     ...productData,
+    images: processedImages,
     slug: generateSlug(productData.title)
   };
   
@@ -113,7 +128,11 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'rating' |
 };
 
 // Update a product
-export const updateProduct = async (id: string, productData: Partial<Omit<Product, 'id'>>): Promise<Product> => {
+export const updateProduct = async (
+  id: string, 
+  productData: Partial<Omit<Product, 'id'>>,
+  imageFile?: File
+): Promise<Product> => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
@@ -122,10 +141,22 @@ export const updateProduct = async (id: string, productData: Partial<Omit<Produc
     throw new Error(`Product with ID ${id} not found`);
   }
   
+  // Handle image file upload if present
+  let processedImages = productData.images ? [...productData.images] : [...localProducts[index].images];
+  if (imageFile) {
+    // In a real application, this would upload the file to a server/cloud storage
+    // For this mock, we'll keep the data URL in the images array
+    processedImages = processedImages.filter(img => !img.startsWith('data:'));
+    
+    // Just reuse the data URL that's already in the form
+    // In a real app, we would upload the file and get a URL back
+  }
+  
   // Update the product
   const updatedProduct = {
     ...localProducts[index],
     ...productData,
+    images: processedImages,
     updatedAt: new Date()
   };
   

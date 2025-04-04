@@ -20,6 +20,9 @@ const ProductPage: React.FC = () => {
   const [categoryName, setCategoryName] = useState<string>('');
 
   useEffect(() => {
+    // Scroll to top when component mounts or slug changes
+    window.scrollTo(0, 0);
+    
     const fetchProduct = async () => {
       if (!slug) return;
       
@@ -203,7 +206,7 @@ const ProductPage: React.FC = () => {
               <FaTruck />
               <ServiceText>
                 <strong>Free Delivery</strong>
-                <span>For orders over $50</span>
+                <span>Fast delivery 3-5 days</span>
               </ServiceText>
             </ServiceItem>
             <ServiceItem>

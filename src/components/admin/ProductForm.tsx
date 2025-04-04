@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaTrash, FaUpload } from 'react-icons/fa';
 import { Product } from '../../types/product';
 import { Category } from '../../types/category';
 import { createProduct, updateProduct } from '../../services/productService';
@@ -27,6 +27,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
   const [affiliateUrl, setAffiliateUrl] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Initialize form with product data if editing
   useEffect(() => {
@@ -131,9 +133,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
       };
       
       if (product) {
-        await updateProduct(product.id, productData);
+        await updateProduct(product.id, productData, imageFile || undefined);
       } else {
-        await createProduct(productData);
+        await createProduct(productData, imageFile || undefined);
       }
       
       onSubmit();
@@ -156,6 +158,28 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAddFeature();
+    }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      setImageFile(selectedFile);
+      
+      // Create a preview URL for the image
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        setImages([...images, result]);
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  const handleOpenFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -292,10 +316,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onClose,
                 onKeyPress={handleImageKeyPress}
               />
               <Button type="button" onClick={handleAddImage}>
-                <FaPlus /> Add
+                <FaPlus /> Add URL
               </Button>
             </InputGroup>
-            <HelperText>Add at least one image URL for your product</HelperText>
+            <HelperText>Add image URLs or upload images directly</HelperText>
+            
+            <UploadButton type="button" onClick={handleOpenFileInput}>
+              <FaUpload /> Upload Image from Device
+            </UploadButton>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageFileChange}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
             
             {images.length > 0 && (
               <ImagesGrid>
@@ -630,6 +665,16 @@ const CancelButton = styled(ActionButton)`
   &:hover:not(:disabled) {
     background-color: ${props => props.theme.colors.lightGray};
   }
+`;
+
+const UploadButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.primary};
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  margin-top: 10px;
 `;
 
 export default ProductForm; 
