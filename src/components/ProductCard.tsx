@@ -21,45 +21,48 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   
   return (
     <CardContainer>
-      <CardImage>
-        <img 
-          src={images.length > 0 ? images[0] : 'https://via.placeholder.com/300'}
-          alt={title} 
-        />
-        {discountPercentage > 0 && (
-          <DiscountBadge>-{discountPercentage}%</DiscountBadge>
-        )}
-        <ActionButtons>
-          <AddToCartButton as={Link} to={`/product/${slug}`}>
-            <FaShoppingCart />
-          </AddToCartButton>
-        </ActionButtons>
-      </CardImage>
-      
-      <CardContent>
-        <ProductTitle>{title}</ProductTitle>
-        <ProductDescription>{shortDescription}</ProductDescription>
-        
-        <PriceContainer>
-          {discountPrice ? (
-            <>
-              <CurrentPrice>{formatPrice(discountPrice)}</CurrentPrice>
-              <OriginalPrice>{formatPrice(price)}</OriginalPrice>
-            </>
-          ) : (
-            <CurrentPrice>{formatPrice(price)}</CurrentPrice>
+      <CardLink to={`/product/${slug}`}>
+        <CardImage>
+          <img 
+            src={images.length > 0 ? images[0] : 'https://via.placeholder.com/300'}
+            alt={title} 
+          />
+          {discountPercentage > 0 && (
+            <DiscountBadge>-{discountPercentage}%</DiscountBadge>
           )}
-        </PriceContainer>
+        </CardImage>
         
-        <Rating>
-          <RatingStars>
-            {[...Array(5)].map((_, index) => (
-              <Star key={index} filled={index < Math.floor(rating)} />
-            ))}
-          </RatingStars>
-          <RatingValue>({rating.toFixed(1)})</RatingValue>
-        </Rating>
-      </CardContent>
+        <CardContent>
+          <ProductTitle>{title}</ProductTitle>
+          <ProductDescription>{shortDescription}</ProductDescription>
+          
+          <PriceContainer>
+            {discountPrice ? (
+              <>
+                <CurrentPrice>{formatPrice(discountPrice)}</CurrentPrice>
+                <OriginalPrice>{formatPrice(price)}</OriginalPrice>
+              </>
+            ) : (
+              <CurrentPrice>{formatPrice(price)}</CurrentPrice>
+            )}
+          </PriceContainer>
+          
+          <Rating>
+            <RatingStars>
+              {[...Array(5)].map((_, index) => (
+                <Star key={index} filled={index < Math.floor(rating)} />
+              ))}
+            </RatingStars>
+            <RatingValue>({rating.toFixed(1)})</RatingValue>
+          </Rating>
+        </CardContent>
+      </CardLink>
+      
+      <ActionButtons>
+        <AddToCartButton as={Link} to={`/product/${slug}`}>
+          <FaShoppingCart />
+        </AddToCartButton>
+      </ActionButtons>
     </CardContainer>
   );
 };
@@ -89,6 +92,12 @@ const CardContainer = styled.div`
     transform: translateY(-5px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
   }
+`;
+
+const CardLink = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+  display: block;
 `;
 
 const CardImage = styled.div`
@@ -130,6 +139,7 @@ const ActionButtons = styled.div`
   opacity: 0;
   transform: translateY(10px);
   transition: all 0.3s ease;
+  z-index: 2;
   
   ${CardContainer}:hover & {
     opacity: 1;

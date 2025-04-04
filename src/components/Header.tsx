@@ -78,7 +78,6 @@ const Header: React.FC = () => {
 
   return (
     <HeaderContainer>
-      {/* Announcement Bar */}
       <AnnouncementBar>
         <MarqueeContainer>
           <MarqueeContent>
@@ -93,7 +92,6 @@ const Header: React.FC = () => {
         </MarqueeContainer>
       </AnnouncementBar>
       
-      {/* Main Header */}
       <MainHeader>
         <Container>
           <HeaderContent>
@@ -104,7 +102,7 @@ const Header: React.FC = () => {
             <LogoAndTitleContainer>
               <LogoContainer>
                 <Link to="/">
-                  <LogoImage src="/daraz-logo-removebg-preview.png" alt="Daraz Deals" />
+                  <LogoImage src="image-removebg-preview.png" />
                 </Link>
               </LogoContainer>
               <SiteName as={Link} to="/">Daraz Deals</SiteName>
@@ -143,7 +141,6 @@ const Header: React.FC = () => {
         </Container>
       </MainHeader>
       
-      {/* Navigation Bar */}
       <NavigationBar>
         <Container>
           <CategoryMenu>
@@ -173,7 +170,6 @@ const Header: React.FC = () => {
         </Container>
       </NavigationBar>
       
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <MobileMenu>
           <MobileMenuHeader>
@@ -263,12 +259,12 @@ const HeaderContainer = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: white;
+  background-color: ${props => props.theme.colors.secondary};
 `;
 
 const AnnouncementBar = styled.div`
-  background-color: #ee4d2d;
-  color: white;
+  background-color: white;
+  color: black;
   font-weight: 500;
   font-size: 13px;
   padding: 8px 0;
@@ -306,7 +302,7 @@ const Container = styled.div`
 
 const MainHeader = styled.div`
   padding: 15px 0;
-  background-color: ${props => props.theme.colors.white};
+  background-color: ${props => props.theme.colors.secondary};
   position: relative;
 `;
 
@@ -330,7 +326,7 @@ const LogoAndTitleContainer = styled.div`
   
   @media (max-width: ${props => props.theme.breakpoints.sm}) {
     justify-content: center;
-    margin-left: 40px; // Make space for the mobile menu button
+    margin-left: 40px;
   }
 `;
 
@@ -348,7 +344,7 @@ const RightSection = styled.div`
 const SiteName = styled.h1`
   font-size: 28px;
   font-weight: 700;
-  color: ${props => props.theme.colors.primary};
+  color: white;
   letter-spacing: 1px;
   font-family: 'Poppins', 'Segoe UI', 'Roboto', sans-serif;
   text-transform: uppercase;
@@ -398,7 +394,7 @@ const SearchToggle = styled.button`
   background: none;
   border: none;
   font-size: 20px;
-  color: ${props => props.theme.colors.text};
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -406,7 +402,7 @@ const SearchToggle = styled.button`
   padding: 8px;
   
   &:hover {
-    color: ${props => props.theme.colors.primary};
+    color: rgba(255, 255, 255, 0.8);
   }
 `;
 
@@ -445,22 +441,34 @@ const CloseSearchButton = styled.button`
   background: none;
   border: none;
   font-size: 18px;
-  color: ${props => props.theme.colors.text};
+  color: white;
   cursor: pointer;
   
   &:hover {
-    color: ${props => props.theme.colors.primary};
+    color: rgba(255, 255, 255, 0.8);
   }
 `;
 
 const NavigationBar = styled.nav`
-  background-color: white;
+  background-color: ${props => props.theme.colors.secondary};
   padding: 10px 0;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  color: white;
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     display: none;
   }
+`;
+
+const pulse = keyframes`
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+`;
+
+const FlashSaleLink = styled.span`
+  color: white;
+  font-weight: 700;
+  animation: ${pulse} 2s infinite;
 `;
 
 const CategoryMenu = styled.ul`
@@ -477,31 +485,19 @@ const CategoryMenu = styled.ul`
   }
 `;
 
-const pulse = keyframes`
-  0% { color: ${props => props.theme.colors.primary}; }
-  50% { color: ${props => props.theme.colors.secondary}; }
-  100% { color: ${props => props.theme.colors.primary}; }
-`;
-
-const FlashSaleLink = styled.span`
-  color: ${props => props.theme.colors.primary};
-  font-weight: 700;
-  animation: ${pulse} 2s infinite;
-`;
-
 const CategoryItem = styled.li`
   white-space: nowrap;
   font-weight: 500;
   position: relative;
   
   a {
-    color: ${props => props.theme.colors.text};
+    color: white;
     text-decoration: none;
     transition: color 0.2s ease;
     padding: 5px 0;
     
     &:hover {
-      color: ${props => props.theme.colors.primary};
+      color: rgba(255, 255, 255, 0.8);
     }
   }
 `;
@@ -511,9 +507,10 @@ const AllCategoriesLink = styled.div`
   align-items: center;
   cursor: pointer;
   font-weight: 600;
+  color: white;
   
   &:hover {
-    color: ${props => props.theme.colors.primary};
+    color: rgba(255, 255, 255, 0.8);
   }
 `;
 
@@ -521,7 +518,7 @@ const CategoriesDropdown = styled.div`
   position: absolute;
   top: 100%;
   left: 0;
-  background: white;
+  background: ${props => props.theme.colors.secondary};
   width: 220px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
@@ -536,9 +533,14 @@ const CategoriesDropdown = styled.div`
 
 const DropdownItem = styled.div`
   padding: 8px 15px;
+  color: white;
   
   &:hover {
-    background-color: ${props => props.theme.colors.lightGray};
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  a {
+    color: white;
   }
 `;
 
@@ -547,7 +549,7 @@ const MobileMenuButton = styled.button`
   font-size: 22px;
   background: none;
   border: none;
-  color: ${props => props.theme.colors.text};
+  color: white;
   cursor: pointer;
   position: absolute;
   left: 10px;
@@ -566,12 +568,13 @@ const MobileMenu = styled.div`
   left: 0;
   width: 280px;
   height: 100vh;
-  background-color: white;
+  background-color: ${props => props.theme.colors.secondary};
   z-index: 1000;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  color: white;
 `;
 
 const MobileMenuHeader = styled.div`
@@ -579,34 +582,40 @@ const MobileMenuHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 15px;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const CloseButton = styled.button`
   font-size: 24px;
   background: none;
   border: none;
-  color: ${props => props.theme.colors.text};
+  color: white;
   cursor: pointer;
 `;
 
 const MobileMenuSearch = styled.form`
   display: flex;
   padding: 15px;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   
   input {
     flex: 1;
     width: 100%;
     padding: 12px 40px 12px 15px;
-    border: 1px solid ${props => props.theme.colors.border};
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 6px;
     font-size: 14px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
     
     &:focus {
       outline: none;
-      border-color: ${props => props.theme.colors.primary};
+      border-color: white;
+    }
+    
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.6);
     }
   }
   
@@ -617,7 +626,7 @@ const MobileMenuSearch = styled.form`
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: ${props => props.theme.colors.primary};
+    color: white;
     font-size: 16px;
     cursor: pointer;
     padding: 0;
@@ -627,7 +636,7 @@ const MobileMenuSearch = styled.form`
 const MobileMenuTitle = styled.h3`
   font-size: 16px;
   margin: 15px;
-  color: ${props => props.theme.colors.text};
+  color: white;
   font-weight: 600;
 `;
 
@@ -640,11 +649,12 @@ const MobileCategories = styled.ul`
   
   li {
     padding: 12px 0;
-    border-bottom: 1px solid ${props => props.theme.colors.border};
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     
     a {
       display: block;
       font-weight: 500;
+      color: white;
     }
   }
 `;
