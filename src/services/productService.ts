@@ -1,36 +1,63 @@
 import { Product } from '../types/product';
 import { mockProducts } from './mockData';
+import axios from 'axios';
 
-// Initialize products from localStorage or use mock data if none exists
-const initializeProducts = (): Product[] => {
-  try {
-    const storedProducts = localStorage.getItem('daraz_mock_products');
-    if (storedProducts) {
-      return JSON.parse(storedProducts);
-    }
-    // If no products in localStorage, save mock products there initially
-    localStorage.setItem('daraz_mock_products', JSON.stringify(mockProducts));
-    return [...mockProducts];
-  } catch (error) {
-    console.error('Error accessing localStorage:', error);
-    return [...mockProducts];
-  }
+// API base URL - change this to your actual backend URL
+const API_URL = 'http://localhost:5000/api';
+
+// Initialize products from API or localStorage as fallback
+let localProducts: Product[] = [];
+
+// Helper function to generate a slug from a title
+const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 };
 
-// Store products locally to maintain state between page refreshes
-let localProducts = initializeProducts();
+// Helper function to calculate average rating
+const calculateAverageRating = (reviews: Array<{ rating: number }>): number => {
+  if (reviews.length === 0) return 0;
+  
+  const sum = reviews.reduce((total, review) => total + review.rating, 0);
+  return parseFloat((sum / reviews.length).toFixed(1));
+};
 
 // Get all products
 export const getAllProducts = async (): Promise<Product[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return localProducts;
+  try {
+    // Try to fetch from API first
+    const response = await axios.get(`${API_URL}/products`);
+    localProducts = response.data;
+    // Update localStorage with the latest data
+    localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    return localProducts;
+  } catch (error) {
+    console.error('Error fetching products from API:', error);
+    // Fallback to localStorage if API fails
+    try {
+      const storedProducts = localStorage.getItem('daraz_mock_products');
+      if (storedProducts) {
+        localProducts = JSON.parse(storedProducts);
+        return localProducts;
+      }
+    } catch (localError) {
+      console.error('Error reading from localStorage:', localError);
+    }
+    // Last resort: use mock data
+    localProducts = [...mockProducts];
+    return localProducts;
+  }
 };
 
 // Get products with pagination
 export const getProducts = async (page: number = 1, limit: number = 10): Promise<Product[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Ensure we have the latest products
+  if (localProducts.length === 0) {
+    await getAllProducts();
+  }
   
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
@@ -43,8 +70,10 @@ export const getProductsByCategory = async (
   limit: number = 10, 
   lastVisible: any = null
 ): Promise<{ products: Product[], lastVisible: any }> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Ensure we have the latest products
+  if (localProducts.length === 0) {
+    await getAllProducts();
+  }
   
   const filtered = localProducts.filter(product => product.categoryId === categoryId);
   
@@ -74,26 +103,38 @@ export const getProductsByCategory = async (
 
 // Get product by ID
 export const getProductById = async (id: string): Promise<Product | null> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const product = localProducts.find(product => product.id === id);
-  return product || null;
+  try {
+    // Try to fetch from API first
+    const response = await axios.get(`${API_URL}/products/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching product ${id} from API:`, error);
+    
+    // Fallback to local cache
+    if (localProducts.length === 0) {
+      await getAllProducts();
+    }
+    
+    return localProducts.find(product => product.id === id) || null;
+  }
 };
 
 // Get product by slug
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Ensure we have the latest products
+  if (localProducts.length === 0) {
+    await getAllProducts();
+  }
   
-  const product = localProducts.find(product => product.slug === slug);
-  return product || null;
+  return localProducts.find(product => product.slug === slug) || null;
 };
 
 // Search products
 export const searchProducts = async (query: string): Promise<Product[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Ensure we have the latest products
+  if (localProducts.length === 0) {
+    await getAllProducts();
+  }
   
   const searchTerm = query.toLowerCase();
   return localProducts.filter(product => 
@@ -107,40 +148,59 @@ export const createProduct = async (
   productData: Omit<Product, 'id' | 'rating' | 'reviews'>, 
   imageFile?: File
 ): Promise<Product> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
   // Handle image file upload if present
   let processedImages = [...productData.images];
   if (imageFile) {
     // In a real application, this would upload the file to a server/cloud storage
-    // For this mock, we'll keep the data URL in the images array
     processedImages = processedImages.filter(img => !img.startsWith('data:'));
-    
-    // Just reuse the data URL that's already in the form
-    // In a real app, we would upload the file and get a URL back
   }
   
-  const newProduct: Product = {
-    id: `product-${Date.now()}`,
-    rating: 0,
-    reviews: [],
+  const productToCreate = {
     ...productData,
     images: processedImages,
-    slug: generateSlug(productData.title)
+    slug: generateSlug(productData.title),
+    rating: 0,
+    reviews: []
   };
   
-  // Add to our local products array
-  localProducts.push(newProduct);
-  
-  // Save to localStorage to persist between refreshes
   try {
-    localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    // Send to API
+    const response = await axios.post(`${API_URL}/products`, productToCreate);
+    const newProduct = response.data.product;
+    
+    // Update local cache
+    localProducts.push(newProduct);
+    
+    // Update localStorage as backup
+    try {
+      localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+    
+    return newProduct;
   } catch (error) {
-    console.error('Error saving to localStorage:', error);
+    console.error('Error creating product on API:', error);
+    
+    // Fallback: Create locally only
+    const newProduct: Product = {
+      id: `product-${Date.now()}`,
+      ...productToCreate,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    localProducts.push(newProduct);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+    
+    return newProduct;
   }
-  
-  return newProduct;
 };
 
 // Update a product
@@ -149,64 +209,89 @@ export const updateProduct = async (
   productData: Partial<Omit<Product, 'id'>>,
   imageFile?: File
 ): Promise<Product> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  const index = localProducts.findIndex(product => product.id === id);
-  if (index === -1) {
+  const localIndex = localProducts.findIndex(product => product.id === id);
+  if (localIndex === -1) {
     throw new Error(`Product with ID ${id} not found`);
   }
   
   // Handle image file upload if present
-  let processedImages = productData.images ? [...productData.images] : [...localProducts[index].images];
+  let processedImages = productData.images ? [...productData.images] : [...localProducts[localIndex].images];
   if (imageFile) {
-    // In a real application, this would upload the file to a server/cloud storage
-    // For this mock, we'll keep the data URL in the images array
     processedImages = processedImages.filter(img => !img.startsWith('data:'));
-    
-    // Just reuse the data URL that's already in the form
-    // In a real app, we would upload the file and get a URL back
   }
   
-  // Update the product
-  const updatedProduct = {
-    ...localProducts[index],
+  const dataToUpdate = {
     ...productData,
-    images: processedImages,
-    updatedAt: new Date()
+    images: processedImages
   };
   
-  // Replace in our array
-  localProducts[index] = updatedProduct;
-  
-  // Save to localStorage to persist between refreshes
   try {
-    localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    // Send to API
+    const response = await axios.put(`${API_URL}/products/${id}`, dataToUpdate);
+    const updatedProduct = response.data.product;
+    
+    // Update local cache
+    localProducts[localIndex] = updatedProduct;
+    
+    // Update localStorage as backup
+    try {
+      localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+    
+    return updatedProduct;
   } catch (error) {
-    console.error('Error saving to localStorage:', error);
+    console.error('Error updating product on API:', error);
+    
+    // Fallback: Update locally only
+    const updatedProduct = {
+      ...localProducts[localIndex],
+      ...dataToUpdate,
+      updatedAt: new Date()
+    };
+    
+    localProducts[localIndex] = updatedProduct;
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+    
+    return updatedProduct;
   }
-  
-  return updatedProduct;
 };
 
 // Delete a product
 export const deleteProduct = async (id: string): Promise<void> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  const index = localProducts.findIndex(product => product.id === id);
-  if (index !== -1) {
-    localProducts.splice(index, 1);
+  try {
+    // Delete from API
+    await axios.delete(`${API_URL}/products/${id}`);
     
-    // Save to localStorage to persist between refreshes
+    // Update local cache
+    localProducts = localProducts.filter(product => product.id !== id);
+    
+    // Update localStorage
+    try {
+      localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  } catch (error) {
+    console.error('Error deleting product from API:', error);
+    
+    // Fallback: Delete locally only
+    localProducts = localProducts.filter(product => product.id !== id);
+    
+    // Save to localStorage
     try {
       localStorage.setItem('daraz_mock_products', JSON.stringify(localProducts));
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
   }
-  
-  return;
 };
 
 // Add a review to a product
@@ -336,23 +421,6 @@ export const deleteReview = async (
   }
   
   return updatedProduct;
-};
-
-// Helper function to calculate average rating
-const calculateAverageRating = (reviews: Array<{ rating: number }>): number => {
-  if (reviews.length === 0) return 0;
-  
-  const sum = reviews.reduce((total, review) => total + review.rating, 0);
-  return parseFloat((sum / reviews.length).toFixed(1));
-};
-
-// Helper function to generate a slug from a title
-const generateSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
 };
 
 // Load saved products from localStorage on initialization
