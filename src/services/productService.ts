@@ -1,8 +1,24 @@
 import { Product } from '../types/product';
 import { mockProducts } from './mockData';
 
+// Initialize products from localStorage or use mock data if none exists
+const initializeProducts = (): Product[] => {
+  try {
+    const storedProducts = localStorage.getItem('daraz_mock_products');
+    if (storedProducts) {
+      return JSON.parse(storedProducts);
+    }
+    // If no products in localStorage, save mock products there initially
+    localStorage.setItem('daraz_mock_products', JSON.stringify(mockProducts));
+    return [...mockProducts];
+  } catch (error) {
+    console.error('Error accessing localStorage:', error);
+    return [...mockProducts];
+  }
+};
+
 // Store products locally to maintain state between page refreshes
-let localProducts = [...mockProducts];
+let localProducts = initializeProducts();
 
 // Get all products
 export const getAllProducts = async (): Promise<Product[]> => {
